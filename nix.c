@@ -239,18 +239,24 @@ void table_delete(Table *table, uint32_t row_index) {
 
 // ... (Functions like load_program_from_file, exec_program, etc. go here)
 
-// int main(int argc, char** argv) {
-//     if (argc < 2) {
-//         printf("Nix: [Error]: Too few arguments specified. Usage: ./nix <filepath>\n");
-//         return 1;
-//     }
-//     if (argc > 2) {
-//         printf("Nix: [Error]: Too many arguments specified. Usage: ./nix <filepath>\n");
-//         return 1;
-//     }
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        printf("Nix: [Error]: Too few arguments specified. Usage: ./nix <filepath>\n");
+        return 1;
+    }
+    if (argc > 2) {
+        printf("Nix: [Error]: Too many arguments specified. Usage: ./nix <filepath>\n");
+        return 1;
+    }
 
-//     uint32_t program_size;
-//     ProgramState program_state;
-//     program_state.stack_size = 0;
-//     program_state.heap_size = 0;
-//     program
+    ProgramState program_state;
+    memset(&program_state, 0, sizeof(ProgramState));
+
+    if (!load_program_from_file(argv[1], &program_state)) {
+        return 1;
+    }
+
+    exec_program(&program_state);
+
+    return 0;
+}
