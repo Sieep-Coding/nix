@@ -17,14 +17,14 @@
 
 #define PANIC_ON_ERR(cond, err_type, ...)  {                                            \
     if(cond) {                                                                          \
-        printf("Nix: Error: %s | Error Code: %i\n", #err_type, (int32_t)err_type);     \
+         printf("Nix: Error: %s | Error Code: %i\n", #err_type, (int32_t)err_type);     \
          printf(__VA_ARGS__);                                                           \
          printf("\n");                                                                  \
     }                                                                                   \
 }                                                                                       \
 
 typedef enum {
-    INST_STACK_PUSH, INST_STACK_PREV,
+    INST_STACK_PUSH, INST_STACK_PREV, INST_STACK_POP,
     INST_PLUS, INST_MINUS, INST_MUL, INST_DIV, INST_MOD,
     INST_EQ, INST_NEQ,
     INST_GT, INST_LT, INST_GEQ, INST_LEQ,
@@ -134,26 +134,24 @@ typedef struct {
     uint32_t macro_positions[PROGRAM_CAP];
     uint32_t macro_count;
     bool found_solution_for_if_block;
+
+    Token program[PROGRAM_CAP]; // Add this line
 } ProgramState;
 
-RuntimeValue
-stack_top(ProgramState* state) {
+RuntimeValue stack_top(ProgramState* state) {
     return state->stack[state->stack_size - 1];
 }
 
-RuntimeValue
-stack_pop(ProgramState* state) {
+RuntimeValue stack_pop(ProgramState* state) {
     state->stack_size--;
     return state->stack[state->stack_size];
 }
 
-RuntimeValue
-stack_peak(ProgramState* state, uint32_t index) {
+RuntimeValue stack_peak(ProgramState* state, uint32_t index) {
     return state->stack[state->stack_size - index];
 }
 
-void
-stack_push(ProgramState* state, RuntimeValue val) {
+void stack_push(ProgramState* state, RuntimeValue val) {
     state->stack_size++;
     state->stack[state->stack_size - 1] = val;
 }
@@ -237,8 +235,29 @@ void table_delete(Table *table, uint32_t row_index) {
     }
 }
 
-// ... (Functions like load_program_from_file, exec_program, etc. go here)
+// Load program from file
+bool load_program_from_file(const char* filename, ProgramState* state);
 
+void exec_program(ProgramState* state) {
+    while (state->inst_ptr < state->program_size) {
+        Token current_token = state->program[state->inst_ptr];
+        switch (current_token.inst) {
+            case INST_STACK_PUSH:
+                stack_push(state, current_token.val);
+                break;
+            case INST_STACK_POP:
+                stack_pop(state);
+                break;
+            // Add more instructions here
+            default:
+                printf("Nix: [Error]: Illegal instruction encountered.\n");
+                break;
+        }
+        state->inst_ptr++;
+    }
+}
+
+// Main function
 int main(int argc, char** argv) {
     if (argc < 2) {
         printf("Nix: [Error]: Too few arguments specified. Usage: ./nix <filepath>\n");
@@ -259,4 +278,24 @@ int main(int argc, char** argv) {
     exec_program(&program_state);
 
     return 0;
+}
+
+// Load program from file
+bool load_program_from_file(const char* filename, ProgramState* state) {
+    (void)state;
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        printf("Nix: [Error]: Could not open file %s\n", filename);
+        return false;
+    }
+    
+    // Read file content into state->program
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        // Tokenize and parse each line to fill state->program
+        // Assume you have a tokenizer and parser (not implemented here)
+        // Example: tokenize_line(line, state);
+    }
+    fclose(file);
+    return true;
 }
