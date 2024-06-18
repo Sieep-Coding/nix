@@ -136,8 +136,6 @@ typedef struct {
     bool found_solution_for_if_block;
 } ProgramState;
 
-// TODO Helper functions like is_str_int, is_str_literal, etc. go here
-
 RuntimeValue
 stack_top(ProgramState* state) {
     return state->stack[state->stack_size - 1];
