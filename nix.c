@@ -158,6 +158,85 @@ stack_push(ProgramState* state, RuntimeValue val) {
     state->stack[state->stack_size - 1] = val;
 }
 
+//helper
+bool is_str_int(const char *str) {
+    if (*str == '-' || *str == '+') str++;
+    while (*str) {
+        if (!isdigit(*str)) return false;
+        str++;
+    }
+    return true;
+}
+
+bool is_str_literal(const char *str) {
+    return str[0] == '"' && str[strlen(str) - 1] == '"';
+}
+
+//table
+typedef struct {
+    char *headers[MAX_TABLE_COLS];
+    char *rows[MAX_TABLE_ROWS];
+    uint32_t row_count;
+    uint32_t col_count;
+} Table;
+
+//operations for table
+void table_create(Table *table, const char **headers, uint32_t col_count) {
+    table->col_count = col_count;
+    for (uint32_t i = 0; i < col_count; i++) {
+        table->headers[i] = strdup(headers[i]);
+    }
+    table->row_count = 0;
+}
+
+void table_insert(Table *table, const char **row) {
+    if (table->row_count < MAX_TABLE_ROWS) {
+        table->rows[table->row_count] = (char *)malloc(MAX_TABLE_COLS * MAX_STRING_LEN);
+        for (uint32_t i = 0; i < table->col_count; i++) {
+            strcpy(&table->rows[table->row_count][i * MAX_STRING_LEN], row[i]);
+        }
+        table->row_count++;
+    } else {
+        printf("Nix: Error: %s | Error Code: %i\n", "ERR_INVALID_TABLE_OPERATION", (int32_t)ERR_INVALID_TABLE_OPERATION);
+        printf("Table has reached its maximum capacity.\n");
+    }
+}
+
+void table_select(Table *table, uint32_t row_index) {
+    if (row_index < table->row_count) {
+        for (uint32_t i = 0; i < table->col_count; i++) {
+            printf("%s: %s\n", table->headers[i], &table->rows[row_index][i * MAX_STRING_LEN]);
+        }
+    } else {
+        printf("Nix: Error: %s | Error Code: %i\n", "ERR_INVALID_TABLE_OPERATION", (int32_t)ERR_INVALID_TABLE_OPERATION);
+        printf("Row index out of bounds.\n");
+    }
+}
+
+void table_update(Table *table, uint32_t row_index, const char **new_row) {
+    if (row_index < table->row_count) {
+        for (uint32_t i = 0; i < table->col_count; i++) {
+            strcpy(&table->rows[row_index][i * MAX_STRING_LEN], new_row[i]);
+        }
+    } else {
+        printf("Nix: Error: %s | Error Code: %i\n", "ERR_INVALID_TABLE_OPERATION", (int32_t)ERR_INVALID_TABLE_OPERATION);
+        printf("Row index out of bounds.\n");
+    }
+}
+
+void table_delete(Table *table, uint32_t row_index) {
+    if (row_index < table->row_count) {
+        free(table->rows[row_index]);
+        for (uint32_t i = row_index; i < table->row_count - 1; i++) {
+            table->rows[i] = table->rows[i + 1];
+        }
+        table->row_count--;
+    } else {
+        printf("Nix: Error: %s | Error Code: %i\n", "ERR_INVALID_TABLE_OPERATION", (int32_t)ERR_INVALID_TABLE_OPERATION);
+        printf("Row index out of bounds.\n");
+    }
+}
+
 // ... (Functions like load_program_from_file, exec_program, etc. go here)
 
 // int main(int argc, char** argv) {
