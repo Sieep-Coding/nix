@@ -1,4 +1,4 @@
-# Nix
+# Nix ⭐️
 ![License: UNLICENSE](https://img.shields.io/badge/License-UNLICENSE-blue.svg)
 
 <img src="https://github.com/Sieep-Coding/nix/blob/main/include/n%20i%20x.png"
